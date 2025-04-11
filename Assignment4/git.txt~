@@ -1,0 +1,13 @@
+Comparing the differences with git branch
+
+My git repository:
+There is only one branch (master). All changes would be made directly to this branch. 
+
+Prof. Eggert's git repository:
+There are 5 branches. This allows for more parallel programming which allows the team to work on multiple features simultaneously without interfereing with each other. It helps track progress and manage changes  of the features/tasks the branches represent. The star indicates that my working directory points to the master branch. 
+
+  maint
+* master
+  next
+  seen
+  todo

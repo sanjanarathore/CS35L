@@ -1,0 +1,106 @@
+--- Exercise 2.1 ---
+
+1) the computation of 2**(607 - 1) * (2**607 - 1)
+
+(* (expt 2 (- 607 1)) (- (expt 2 607) 1))
+
+141053783706712069063207958086063189881486743514715667838838675999954867742652380114104193329037690251561950568709829327164087724366370087116731268159313652487450652439805877296207297446723295166658228846926807786652870188920867879451478364569313922060370695064736073572378695176473055266826253284886383715072974324463835300053138429460296575143368065570759537328128
+
+
+2) number of bits to represent 2**(607 - 1) * (2**607 - 1)
+
+By properties of logs, 
+log2( 2**(607 - 1) * (2**607 - 1)) )
+ = log2(2**(607 - 1)) + log2 ((2**607 - 1))
+ = 606 + log2 (2**607 - 1)
+
+Lisp expression: ceiling(+ 606 (log ( - (expt 2 607) 1) 2)) 
+1213 bits
+
+
+3) C-h k C-h k: C-h k provides information about a command so C-h k C-h k will provide information about the C-h k command
+
+
+4) C-h k M-SPC: describes what command is bound to M-SPC and gives information about what the command M-SPC does 
+
+
+5) general function of M-SPC: cycle-spacing
+
+
+--- Homework ---
+
+1) What happens when the script is invoked on /dev/null, and why?
+
+You get an IndexError. Since /dev/null is an empty file, self.lines will be an empty list. When you try iterating through an empty list the code throws an IndexError.
+
+
+2) What happens when the script is invoked with Python3 instead of Python2, and why?
+
+You get a SyntaxError error as the method of catching exceptions and unpacking their attributes as a tuple used in Python2 is not supported with Python3.
+
+
+3) What happens when my shuf.py code is invoked with Python2 instead of Python3, and why?
+
+My shuf.py works as expected because all the code syntax is compatible with Python2 as well.
+
+
+4) Benchmark tests
+
+-- Old Python --
+
+Trial 1: 0.980 s
+real        0m2.532s
+user        0m0.939s
+sys        0m0.041s
+
+Trial 2: 1.020 s
+real        0m2.885s
+user        0m0.971s
+sys        0m0.049s
+
+Trial 3: 0.993 s
+real        0m2.196s
+user        0m0.954s
+sys        0m0.039s
+
+Median: 0.993 s
+
+
+-- Python 3.11 --
+
+Trial 1: 0.669 s
+real        0m2.167s
+user        0m0.634s
+sys        0m0.035s
+
+Trial 2: 0.660 s
+real        0m1.458s
+user        0m0.602s
+sys        0m0.058s
+
+Trial 3: 0.638 s
+real        0m1.254s
+user        0m0.611s
+sys        0m0.027s
+
+Median: 0.660 s
+
+
+-- Coreutils shuf --
+
+Trial 1: 0.075 s
+real        0m0.229s
+user        0m0.064s
+sys        0m0.011s
+
+Trial 2: 0.077 s
+real        0m0.227s
+user        0m0.068s
+sys        0m0.009s
+
+Trial 3: 0.079 s
+real        0m0.153s
+user        0m0.068s
+sys        0m0.011s
+
+Median: 0.077 s

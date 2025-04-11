@@ -1,0 +1,21 @@
+/usr/bin/sh
+/usr/local/cs/bin/sleep
+/usr/bin/type
+sed
+seq
+/usr/local/cs/emacs-29.3/bin/emacs-29.3
+8.5.0
+13.2.0
+user
+add
+execute
+other users not in the file's group
+remove
+write
+9841
+373
+/usr/lib64/libbz2.so.1.0.6
+paste
+C-y
+
+

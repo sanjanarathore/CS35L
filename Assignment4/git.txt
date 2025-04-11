@@ -1,0 +1,30 @@
+Comparing the differences with git branch -a
+The -a option shows all the remote branches as well.
+
+My cloned git repository:
+There is only one local branch (master). All changes would be made directly to this branch. 
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/jch
+  remotes/origin/maint
+  remotes/origin/master
+  remotes/origin/next
+  remotes/origin/seen
+  remotes/origin/todo
+
+Prof. Eggert's git repository:
+There are 5 local branches. This allows for more parallel programming which allows the team to work on multiple features simultaneously without interfereing with each other. It helps track progress and manage changes  of the features/tasks the branches represent. The star indicates that my working directory points to the master branch. This repository also has an additional remote branch (main) 
+
+  maint
+* master
+  next
+  seen
+  todo
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/jch
+  remotes/origin/main
+  remotes/origin/maint
+  remotes/origin/master
+  remotes/origin/next
+  remotes/origin/seen
+  remotes/origin/todo

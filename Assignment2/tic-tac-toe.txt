@@ -1,0 +1,425 @@
+Tic-Tac-Toe React Documentation
+
+===  Setting Up React Locally ===
+1. Download Node.js: https://nodejs.org/en/
+
+2. Download Sandbox: From the tutorial listed above, in the first live code editor, click Fork to open the editor in a new tab using the website CodeSandbox. Press the top-left corner button to open the menu and click Download Sandbox.
+
+3. Rename the zip file, unzip the archive, then open terminal and cd into the unzipped directory.
+
+4. Install dependencies with npm install
+
+5. Run npm start to start a local server. Follow the prompts to view the code running in a browser.
+
+6. To edit my files, I used VSCode.
+
+
+===  Code ===
+- App.js: create components (peices of reusable code that represent a part of the UI)
+- styles.css: defines the styles for your React app
+- index.js: bridge between components in App.js file and web browser
+
+1. Starter Code: Create the first square
+
+-- App.js --
+export default function Square() {
+  return <button className="square">X</button>;
+}
+
+- export: JS keyword that makes this function accessible outside of this file
+- default: JS keyword tells other files using your code that it's the main function in your file
+- <button>: JSX element (combination of JS code + HTML tags that descibes what you'd like to display
+- className="square": button property (prop) that tells CSS how to style the button
+
+
+2. Creating the remaining 9 squares
+
+Problem: React components can only return a single JSX element which means we cannot return multiple adjasent JSX elemnts like two buttons.
+Solution: Use Fragments (<> and </>) to wrap adjacent JSX elements like so:
+
+-- App.js --
+export default function Square() {
+  return (
+    <>
+      <button className="square">X</button>
+      <button className="square">X</button>
+    </>
+  );
+}
+
+Copy paste the button element until you have 9 squares.
+
+
+3. Positioning the squares in a grid
+
+Problem: Squares are in a single line, not a grid.
+Solution: Group the squares into rows using divs and add some CSS classes
+
+Change component name to Board from Square.
+
+-- App.js --
+export default function Board() {
+  return (
+    <>
+      <div className="board-row">
+        <button className="square">1</button>
+        <button className="square">2</button>
+        <button className="square">3</button>
+      </div>
+      <div className="board-row">
+        <button className="square">4</button>
+        <button className="square">5</button>
+        <button className="square">6</button>
+      </div>
+      <div className="board-row">
+        <button className="square">7</button>
+        <button className="square">8</button>
+        <button className="square">9</button>
+      </div>
+    </>
+  );
+}
+
+4. Passing Data through props
+
+- React's component architectures allows you to create a reusable component to avoid, messy duplicate code. Create a square component.
+- Update the Board component to render that Square component using JSX syntax: <Square />
+- Update the Square component to read the value prop that you'll pass from the board: function Square({ value})
+- Replace 1 with {value} in the Square component. Board will be blank at this point because we are not rendering the value prop to each square component in the Board component.
+
+-- App.js --
+function Square({ value }) {
+  return <button className="square">{value}</button>;
+}
+
+export default function Board() {
+  return (
+    <>
+      <div className="board-row">
+        <Square value="1" />
+        <Square value="2" />
+        <Square value="3" />
+      </div>
+      <div className="board-row">
+        <Square value="4" />
+        <Square value="5" />
+        <Square value="6" />
+      </div>
+      <div className="board-row">
+        <Square value="7" />
+        <Square value="8" />
+        <Square value="9" />
+      </div>
+    </>
+  );
+}
+
+
+5. Making an interactive component
+
+Goal: Fill the Square component with an X when you click it.
+
+- Declare handleClick function inside of Square
+- add onClick to the props of the button JSX element returned from the Square
+
+-- App.js --
+function Square({ value }) {
+  function handleClick() {
+    console.log('clicked!');
+  }
+
+  return (
+    <button
+      className="square"
+      onClick={handleClick}
+    >
+      {value}
+    </button>
+  );
+}
+
+Current Code: Should log "clicked!" in the Console tab whenever you click a square. Open browser console using Option + ⌘ + J (on macOS).
+
+- Make the Square component "remember" it got clicked. Use React's special function called useState. Import it into App.js using:
+- Remove the value prop from the Square component and add a new line that calls useState. setValue is used to change the value.
+- Remove value prop from all nine Square components on Board: <Square />
+- Change Square to display an "X" when clicked
+
+-- App.js __
+function Square() {
+  const [value, setValue] = useState(null);
+
+  function handleClick() {
+    setValue('X');
+  }
+
+  return (
+    <button
+      className="square"
+      onClick={handleClick}
+    >
+      {value}
+    </button>
+  );
+}
+
+
+6. Install React Dev Tools for Chrome: https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en
+
+
+7. Lifting state up
+To collect Dta from multiple children (or have two child components communicate with each other), declare a shared state in their parent component. The parent component can pass that state back down to the children via props. This keeps the child components in sync with each other and the parent.
+
+Edit the Board component so that it declares the state variable named squares that defualts to an array of 9 nulls corresponding to the 9 squares:
+const [squares, setSquares] = useState(Array(9).fill(null));
+
+- useState() declares a squares state variable that's initially set to that array. Each entry in the array corresponds to the value of a square.
+
+Board component needs to pass the value prop down to each Square that it renders:
+
+-- App.js --
+export default function Board() {
+  const [squares, setSquares] = useState(Array(9).fill(null));
+  return (
+    <>
+      <div className="board-row">
+        <Square value={squares[0]} />
+        <Square value={squares[1]} />
+        <Square value={squares[2]} />
+      </div>
+      <div className="board-row">
+        <Square value={squares[3]} />
+        <Square value={squares[4]} />
+        <Square value={squares[5]} />
+      </div>
+      <div className="board-row">
+        <Square value={squares[6]} />
+        <Square value={squares[7]} />
+        <Square value={squares[8]} />
+      </div>
+    </>
+  );
+}
+
+Edit the Square component to recieve the value prop from Board Component. Remove Square's own stateful tracking of value and the button's onClick prop:
+
+-- App.js --
+function Square({value}) {
+  return <button className="square">{value}</button>;
+}
+
+
+8. Change what happens when square is clicked
+Need to create a way for the Square to update the Board's state. Since state is private to a component that defines it, you cannot update teh Board's state from the Square.
+
+Pass a function from Board component to Square componenet, and you'll have Square call that function when a square is clicked. Call the function onSquareClick. Add onSquareClick function to the Square component's props.
+
+-- App.js --
+function Square({ value, onSquareClick  }) {
+  return (
+    <button className="square" onClick={onSquareClick}>
+      {value}
+    </button>
+  );
+}
+
+Connect onSquareClick prop to a function in the Board component named handleClick. Pass the function to the onSquareClick prop of the first square component:
+<Square value={squares[0]} onSquareClick={handleClick} />
+
+Define the handleClick function inside the Board component to update the squares array holding your board's state:
+  function handleClick(i) {
+    const nextSquares = squares.slice();
+    nextSquares[i] = "X";
+    setSquares(nextSquares);
+  }
+
+- handClick function creates a copy of the squares array (nextSquares) with the JavaScript slide() array method. Then it updates the nexSquares array to add X to the ith square. Calling the setSquares function lets React know the state of the component has been changed which will trigger a rerender of the components that use the squares state (Board) as well as the children compoenents (Squares)
+
+Problem: handleClick will be called an infinite number of times when you call it using handleClick(0)
+Solution: Define a function that calls handleClick using arrow function => shortcut.
+<Square value={squares[0]} onSquareClick={() => handleClick(0)}
+
+Repeat for the 8 other squares corresponding the argument with the index of the correct square.
+
+
+** Importance of Immutability **
+
+- Makes complex features easier to implement: If you keep previous versions of the data intact you can reuse them later. This is useful for implementing an undo/redo feature for example.
+- Immutability makes it cheap for components to compare whether their data was changed or not. (Useful for when all child components re-render automatically when the state of a parent component changes by defualt.)
+
+
+9. Taking Turns
+
+Set first move to be "X" by default. Keep track of this by adding another state to the board component.
+const [xIsNext, setXIsNext] = useState(true);
+
+- Each time a player moves, xIsNext will be flipped to determine which player goes next and the game's state will be saved.
+
+Update Board's handleClick function to flip the value of xIsNext:
+
+-- App.js --
+  function handleClick(i) {
+    const nextSquares = squares.slice();
+    if (xIsNext) {
+      nextSquares[i] = "X";
+    } else {
+      nextSquares[i] = "O";
+    }
+    setSquares(nextSquares);
+    setXIsNext(!xIsNext);
+  }
+
+Problem: You can overwrite already clicked on Squares.
+Solution: Return early if the square already has an X or a O
+
+-- App.js --
+function handleClick(i) {
+  if (squares[i]) {
+    return;
+  }
+  const nextSquares = squares.slice();
+  //...
+}
+
+
+10. Declaring a winner
+Goal: Show the game is won when there are no more turns to make.
+
+Create helper function called calculateWinner that takes an array of 9 squares, checks for a winner and returns 'X', 'O', or null as appropriate.
+
+-- App.js --
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+
+Call calculateWiner(squares) in the Board component's handleClick function to check if the player has won.
+- You can check this at the same time when you check if a user has clicked a square that already has X or 0 as you would like to return early in both cases.
+
+function handleClick(i) {
+  if (squares[i] || calculateWinner(squares)) {
+    return;
+  }
+  const nextSquares = squares.slice();
+  //...
+}
+
+To let players know when the game is over, display text stating the winner. Do this by adding a status section to the board's component that will be display the winner if the game is over and if the game is ongoing it will display which player's turn is next.
+
+-- App.js --
+export default function Board() {
+  // ...
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = "Winner: " + winner;
+  } else {
+    status = "Next player: " + (xIsNext ? "X" : "O");
+  }
+
+  return (
+    <>
+      <div className="status">{status}</div>
+      <div className="board-row">
+        // ...
+  )
+}
+
+
+=== Finished Code ===
+
+import { useState } from 'react';
+
+function Square({ value, onSquareClick }) {
+  return (
+    <button className="square" onClick={onSquareClick}>
+      {value}
+    </button>
+  );
+}
+
+export default function Board() {
+  const [xIsNext, setXIsNext] = useState(true);
+  const [squares, setSquares] = useState(Array(9).fill(null));
+
+  function handleClick(i) {
+    if (squares[i] || calculateWinner(squares)) {
+      return;
+    }
+    const nextSquares = squares.slice();
+    if (xIsNext) {
+      nextSquares[i] = "X";
+    } else {
+      nextSquares[i] = "O";
+    }
+    setSquares(nextSquares);
+    setXIsNext(!xIsNext);
+  }
+
+  const winner = calculateWinner(squares);
+  let status;
+  if (winner) {
+    status = "Winner: " + winner;
+  } else {
+    status = "Next player: " + (xIsNext ? "X" : "O");
+  }
+
+  return (
+    <>
+      <div className="status">{status}</div>
+      <div className="board-row">
+        <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
+        <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
+        <Square value={squares[2]} onSquareClick={() => handleClick(2)} />
+      </div>
+      <div className="board-row">
+        <Square value={squares[3]} onSquareClick={() => handleClick(3)} />
+        <Square value={squares[4]} onSquareClick={() => handleClick(4)} />
+        <Square value={squares[5]} onSquareClick={() => handleClick(5)} />
+      </div>
+      <div className="board-row">
+        <Square value={squares[6]} onSquareClick={() => handleClick(6)} />
+        <Square value={squares[7]} onSquareClick={() => handleClick(7)} />
+        <Square value={squares[8]} onSquareClick={() => handleClick(8)} />
+      </div>
+    </>
+  );
+}
+
+function calculateWinner(squares) {
+  const lines = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+}
+
+
+=== Completed Tic-Tac-Toe! ===

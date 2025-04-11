@@ -1,0 +1,47 @@
+I used the following command to find the commit containing the message in the assignment:
+
+$ git log --grep="git merge-tree"
+
+commit bcf22f29df87f25582de0ac9274d1567fa16be6f
+Merge: 7f8a6caee5 92481d1b26
+Author: Junio C Hamano <gitster@pobox.com>
+Date:   Tue Oct 25 17:11:34 2022 -0700
+
+    Merge branch 'js/merge-ort-in-read-only-repo' into maint-2.38
+    
+    In read-only repositories, "git merge-tree" tried to come up with a
+    merge result tree object, which it failed (which is not wrong) and
+    led to a segfault (which is bad), which has been corrected.
+    
+    * js/merge-ort-in-read-only-repo:
+      merge-ort: return early when failing to write a blob
+      merge-ort: fix segmentation fault in read-only repositories
+
+However, "* js/merge-ort-in-read-only-repo:" indicates that this commit was a merge. The lines under it are descriptions of the commits that are a part of this merge. The commit with the description "fix segmentation fault in read-only repositories" points towards the original commit we are looking for so I used the following git log command to find it:
+
+$ git log --grep="fix segmentation fault in read-only repositories"
+
+I found the original commit:
+
+commit 0b55d930a69692c7f4e7b90e35fa41f6c46df4bc
+Author: Johannes Schindelin <Johannes.Schindelin@gmx.de>
+Date:   Wed Sep 28 07:29:21 2022 +0000
+
+    merge-ort: fix segmentation fault in read-only repositories
+    
+    If the blob/tree objects cannot be written, we really need the merge
+    operations to fail, and not to continue (and then try to access the tree
+    object which is however still set to `NULL`).
+    
+    Let's stop ignoring the return value of `write_object_file()` and
+    `write_tree()` and set `clean = -1` in the error case.
+    
+    Reviewed-by: Elijah Newren <newren@gmail.com>
+    Signed-off-by: Johannes Schindelin <johannes.schindelin@gmx.de>
+    Signed-off-by: Junio C Hamano <gitster@pobox.com>
+
+The ID of this commit is 0b55d930a69692c7f4e7b90e35fa41f6c46df4bc. It was authored by Johannes Schindelin.
+
+To generate the patch files for this change, I used the following command:
+
+$ git format-patch -1 0b55d930a69692c7f4e7b90e35fa41f6c46df4bc

@@ -1,0 +1,22 @@
+To find the commit history of the line, I used the following git log command:
+
+$ git log -S "Even newspaper reports present contradictory information." --source --all
+
+This command outputted a commit with the id c12b432741eed9a422fbf99fa27af6e7a941d88b. The author of the commit is David Olsen and the data is Thursday Dec 21 1995. The change was made in the file northamerica.
+
+To further investigate this commit, I used the following git show command and redirected my output into a file.
+
+$ git show c12b432741eed9a422fbf99fa27af6e7a941d88b > commitinfo
+
+I searched for the line in my commitinfo file and found where the line was introduced:
+
++# From Paul Eggert (1995-12-19):
++# Indiana generally observes either EST all year, or CST/CDT,
++# but areas near Cincinnati and Louisville use those cities' timekeeping
++# and in 1969 and 1970 the whole state observed daylight time;
++# and there are other exceptions as noted below.
++# Shanks partitions Indiana into 345 regions, each with its own time history,
++# and writes ``Even newspaper reports present contradictory information.''
++# Fortunately, most of the complexity occurred before our cutoff date of 1970.
+
+As you can see, the line is quoted and the origial source was cited which means it was not plagiarism. 

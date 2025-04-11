@@ -1,0 +1,10 @@
+#!/bin/bash
+
+input=$(cat)
+timezones=($(echo "$input" | grep "CommitDate: " | grep -o ".....$" | sort -ru ))
+
+for zone in "${timezones[@]}"
+do
+    echo "$zone" $(echo "$input" | grep "CommitDate:" | grep -e "$zone" | wc -l)
+done
+

@@ -1,0 +1,65 @@
+Chorus Lapilli React Documentation
+
+=== Code ===
+1. Chorus Lapilli is very similar to Tic-Tac-Toe so I used my source code from that as a starting point. It is run the same way as tic-tac-toe using npm start.
+
+2. Difference from Tic-Tac-Toe and Control Flow
+--- Differences ---
+- After your first three moves, instead of adding further pieces you must instead move one of your existing pieces to an adjacent empty square. Therefore, after your third move you always occupy three squares. The move can be up, down, left, right, or diagonal.
+
+- If it is your turn to move and you have three pieces on the board and one of your pieces is in the center square, your move must either win or vacate the center square.
+
+--- handleClick Control Flow ---
+- if there is a winner
+  - do nothing
+- if players haven't used all their pieces
+ - place piece on empty square
+ - clicking a already clicked square does nothing
+- all squares used
+ - clicking on an already occupied square selects it
+ - if a square is selected, click on an empty square to move it
+
+3. placeNewPiece function
+- created a function to handle placing a new piece (assuming not all pieces have been used) to make the code more organized
+
+4. allPiecesUsed function
+- implemented by counting the number of non null (occupied) squares on the board. return true if this number is less than 6.
+
+5. setSelectedSquare function
+- created a selectedSquare use state:
+const [selectedSquare, setSelectedSquare] = useState(null);
+
+6. movePiece function
+- checks the validity of a move before moving it. calls a function called isLegalMove to check if the move is valid.
+
+7. isValidMove function
+- checks if you are trying to move your piece to an adjacent square. calls getAdjacentEmptySquares to get a list of valid moves
+- checks if you are handling the center piece correctly
+ - if all pieces are used, the center piece is occupied with the current player's token, and the center is not selected to move, check if the proposed move is a winning move. if it is not a winning move, the suggested move is not a valid move.
+
+8. getAdjacentEmptySquares function
+- returns a list of empty adjacent squares to the selected box given the current state of the board and the index of the selected box
+
+9. Using the control flow listed in (2), I implemented my handleClick function like so:
+  function handleClick(i) {
+    if (calculateWinner(squares)) {
+      return;
+    }
+    if (!allPiecesUsed(squares)) {
+      if (squares[i]) {
+        return;
+      }
+      placeNewPiece(i);
+    }
+    else {
+      if (squares[i] === (xIsNext ? "X" : "O")) {
+        setSelectedSquare(i);
+        return;
+      }
+      if (((selectedSquare) != null) &&  (squares[i] == null)) {
+        movePiece(i);
+      }
+    }
+  }
+
+=== Completed Chorus Lapilli ===

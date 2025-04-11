@@ -1,0 +1,154 @@
+
+import os  # Importing the os module for interacting with the operating system
+import sys  # Importing the sys module for system-specific parameters and functions
+import zlib  # Importing the zlib module for compression and decompression
+
+# Defining a class for a Git commit node with its hash and branch names
+class GitCommitNodeWithHash:
+    def __init__(self, commit_hash, branch_names=[]):
+        self.commit_hash = commit_hash
+        self.parent_nodes = set()
+        self.child_nodes = set()
+        self.branch_names = branch_names
+
+# Function to check if the current directory is inside a Git repository
+def check_if_inside_git_repository():
+    # Check if the current directory is not the root directory and doesn't contain a '.git' folder
+    while os.getcwd() != '/' and '.git' not in os.listdir():
+        os.chdir('../')  # Move up one directory
+    return '.git' in os.listdir()  # Return True if '.git' folder is found, False otherwise
+
+# Function to validate if the current directory is inside a Git repository
+def validate_git_repository():
+    if not check_if_inside_git_repository():  # If not inside a Git repository
+        sys.stderr.write('Cannot perform operation: Current directory is not inside a Git repository.\n')
+        exit_status = 1  # Set the exit status to 1 (indicating error)
+        exit(exit_status)  # Exit the script with the specified exit status
+    git_folder_path = os.path.join(os.getcwd(), '.git')  # Get the path of the '.git' folder
+    if not os.path.isdir(git_folder_path):  # If '.git' folder doesn't exist
+        sys.stderr.write('Cannot perform operation: Current directory is not inside a Git repository.\n')
+        exit_status = 1  # Set the exit status to 1 (indicating error)
+        exit(exit_status)  # Exit the script with the specified exit status
+    os.chdir(git_folder_path)  # Change the current working directory to the '.git' folder
+# Function to create a mapping of commit hashes to branch names
+def create_commit_hash_to_branch_names_mapping():
+    commit_hash_to_branch_names_mapping = {}  # Initialize an empty dictionary for the mapping
+    os.chdir('./refs/heads')  # Change the current working directory to the 'refs/heads' folder
+    for root, dirs, files in os.walk("."):  # Iterate through all files and directories in the current directory
+        for name in files + dirs:
+            if os.path.isfile(os.path.join(root, name)):  # If the item is a file
+                branch_name = os.path.join(root, name)[2:]  # Get the branch name
+                branch_file = open(branch_name, 'r')  # Open the branch file
+                commit_hash = branch_file.read()[:-1]  # Read the commit hash from the file
+                if commit_hash not in commit_hash_to_branch_names_mapping.keys():
+                    # If the commit hash is not already in the mapping, add it with the branch name as a list
+                    commit_hash_to_branch_names_mapping[commit_hash] = [branch_name]
+                else:
+                    # If the commit hash is already in the mapping, append the branch name to the existing list
+                    commit_hash_to_branch_names_mapping[commit_hash].append(branch_name)
+                branch_file.close()  # Close the branch file
+    os.chdir('../../')  # Move up two directories
+    return commit_hash_to_branch_names_mapping  # Return the mapping of commit hashes to branch names
+
+# Function to extract the parent hashes from the commit details
+def extract_parent_hashes(commit_details):
+    parent_hashes = []  # Initialize an empty list for the parent hashes
+    for line in commit_details.split('\n'):  # Iterate through each line in the commit details
+        if line.startswith('parent'):  # If the line starts with 'parent'
+            parent_hashes.append(line.split(' ')[1])  # Add the parent hash to the list
+    return parent_hashes  # Return the list of parent hashes
+
+# Function to get the parent hashes of a commit
+def get_parent_hashes_of_commit(commit_hash):
+    first_half, second_half = commit_hash[0:2], commit_hash[2:]  # Split the commit hash into two parts
+    os.chdir(os.path.join('.', first_half))  # Change the current working directory to the corresponding folder
+    commit_file = open(second_half, 'rb')  # Open the commit file in binary mode
+    commit_details = zlib.decompress(commit_file.read()).decode()  # Decompress and decode the commit details
+    commit_file.close()  # Close the commit file
+    os.chdir('../')  # Move up one directory
+    return extract_parent_hashes(commit_details)  # Return the parent hashes extracted from the commit details
+# Function to build the commit graph (DAG)
+def build_commit_graph(commit_hash_to_branch_names_mapping):
+    os.chdir('./objects')  # Change the current working directory to the 'objects' folder
+    commit_node_mapping = {}  # Initialize an empty dictionary for the commit node mapping
+    root_commits = set()  # Initialize an empty set for the root commits
+    for commit_hash in commit_hash_to_branch_names_mapping:  # Iterate through each commit hash in the mapping
+        if commit_hash in commit_node_mapping.keys():  # If the commit hash already exists in the mapping
+            commit_node_mapping[commit_hash].branch_names = commit_hash_to_branch_names_mapping[commit_hash]
+            # Update the branch names of the existing commit node
+        else:
+            # If the commit hash doesn't exist in the mapping, create a new commit node with the hash and branch names
+            commit_node_mapping[commit_hash] = GitCommitNodeWithHash(commit_hash, commit_hash_to_branch_names_mapping[commit_hash])
+            commit_stack = [commit_node_mapping[commit_hash]]  # Initialize a stack with the new commit node
+            process_commits(commit_node_mapping, commit_stack, root_commits)  # Process the commits recursively
+    os.chdir('../')  # Move up one directory
+    return list(root_commits), commit_node_mapping  # Return the list of root commits and the commit node mapping
+# Function to process the commits and build the graph
+def process_commits(commit_node_mapping, commit_stack, root_commits):
+    while len(commit_stack) != 0:  # While the commit stack is not empty
+        current_commit_node = commit_stack.pop()  # Pop the top commit node from the stack
+        parent_hashes = get_parent_hashes_of_commit(current_commit_node.commit_hash)  # Get the parent hashes
+        if len(parent_hashes) == 0:  # If the commit has no parent (root commit)
+            root_commits.add(current_commit_node.commit_hash)  # Add the commit hash to the root commits set
+        for parent_hash in parent_hashes:  # Iterate through each parent hash
+            if parent_hash not in commit_node_mapping.keys():  # If the parent hash doesn't exist in the mapping
+                commit_node_mapping[parent_hash] = GitCommitNodeWithHash(parent_hash)
+                # Create a new commit node with the parent hash
+            parent_commit_node = commit_node_mapping[parent_hash]  # Get the parent commit node
+            current_commit_node.parent_nodes.add(parent_commit_node)  # Add the parent node to the current node's parent nodes
+            parent_commit_node.child_nodes.add(current_commit_node)  # Add the current node to the parent node's child nodes
+            commit_stack.append(parent_commit_node)  # Push the parent node to the commit stack
+
+# Function to perform topological sort on the commit graph
+def perform_topological_sort(root_commits, commit_node_mapping):
+    sorted_commit_hashes = []  # Initialize an empty list for the sorted commit hashes
+    visited_commits = set()  # Initialize an empty set for the visited commits
+    commit_stack = root_commits.copy()  # Create a copy of the root commits as the initial commit stack
+    while len(commit_stack) != 0:  # While the commit stack is not empty
+        current_commit_hash = commit_stack[-1]  # Get the top commit hash from the stack
+        visited_commits.add(current_commit_hash)  # Add the commit hash to the visited commits set
+        child_commits = []  # Initialize an empty list for the child commits
+        for child in commit_node_mapping[current_commit_hash].child_nodes:  # Iterate through each child node
+            if child.commit_hash not in visited_commits:  # If the child node has not been visited
+                child_commits.append(child)  # Add the child node to the list of child commits
+        if len(child_commits) == 0:  # If there are no child commits
+            commit_stack.pop()  # Pop the current commit hash from the stack
+            sorted_commit_hashes.append(current_commit_hash)  # Add the current commit hash to the sorted list
+        else:
+            commit_stack.append(child_commits[0].commit_hash)  # Push the first child commit hash to the stack
+    return sorted_commit_hashes  # Return the sorted list of commit hashes
+# Function to output the commits in topological order
+def output_topological_order(sorted_commit_hashes, commit_node_mapping):
+    for i in range(len(sorted_commit_hashes)):  # Iterate through each commit hash in the sorted list
+        current_commit_hash = sorted_commit_hashes[i]  # Get the current commit hash
+        current_node = commit_node_mapping[current_commit_hash]  # Get the commit node corresponding to the hash
+        if len(current_node.branch_names) == 0:  # If the commit node has no branch names
+            print(sorted_commit_hashes[i])  # Output the commit hash
+        else:
+            print(sorted_commit_hashes[i] + " ", end="")  # Output the commit hash followed by a space
+            print(*sorted(current_node.branch_names))  # Output the sorted branch names
+        if i < (len(sorted_commit_hashes) - 1):  # If it's not the last commit hash in the sorted list
+            next_node = commit_node_mapping[sorted_commit_hashes[i + 1]]  # Get the next commit node
+            if next_node.commit_hash not in [parent.commit_hash for parent in current_node.parent_nodes]:
+                # If the next commit hash is not a parent of the current commit node
+                print(*[parent.commit_hash for parent in current_node.parent_nodes], end="=\n\n=")
+                # Output the parent commit hashes of the current commit node, separated by '=', and end with '\n\n='
+                print(*[child.commit_hash for child in next_node.child_nodes])
+                # Output the child commit hashes of the next commit node
+# Function to perform commit topological ordering
+def topo_order_commits():
+    validate_git_repository()  # Validate if the current directory is inside a Git repository
+    commit_hash_to_branch_names_mapping = create_commit_hash_to_branch_names_mapping()
+    # Create a mapping of commit hashes to branch names
+    root_commits, commit_node_mapping = build_commit_graph(commit_hash_to_branch_names_mapping)
+    # Build the commit graph (DAG) and get the root commits and commit node mapping
+    sorted_commit_hashes = perform_topological_sort(root_commits, commit_node_mapping)
+    # Perform topological sort on the commit graph to get the sorted commit hashes
+    output_topological_order(sorted_commit_hashes, commit_node_mapping)
+    # Output the commits in topological order
+
+# To ensure that the implementation does not invoke git commands, strace -f was used to trace system calls
+# and monitor the executed commands. The -f option is used to trace child processes as well.
+# By analyzing the strace output, it was confirmed that the implementation does not make any direct
+# calls to git commands, ensuring independence from the git executable.
+
